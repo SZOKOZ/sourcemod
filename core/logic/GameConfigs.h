@@ -72,6 +72,10 @@ public: //NameHashSet
 	{
 		return strcmp(key, value->m_File) == 0;
 	}
+	static inline uint32_t hash(const detail::CharsAndLength &key)
+	{
+		return key.hash();
+	}
 private:
 	char m_File[PLATFORM_MAX_PATH];
 	char m_CurFile[PLATFORM_MAX_PATH];
@@ -86,6 +90,7 @@ private:
 	char m_Prop[64];
 	char m_offset[64];
 	char m_Game[256];
+	char m_Key[64];
 	bool bShouldBeReadingDefault;
 	bool had_game;
 	bool matched_game;

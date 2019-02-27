@@ -328,6 +328,7 @@ void SDKHooks::SDK_OnAllLoaded()
 	if (hook != 0) \
 	{ \
 		SH_REMOVE_HOOK_ID(hook); \
+		hook = 0; \
 	}
 
 void SDKHooks::SDK_OnUnload()
@@ -1122,13 +1123,13 @@ int SDKHooks::HandleOnTakeDamageHook(CTakeDamageInfoHack &info, SDKHookType hook
 				if (ret == Pl_Changed)
 				{
 					CBaseEntity *pEntAttacker = gamehelpers->ReferenceToEntity(attacker);
-					if (!pEntAttacker)
+					if (!pEntAttacker && attacker != -1)
 					{
 						callback->GetParentContext()->BlamePluginError(callback, "Callback-provided entity %d for attacker is invalid", attacker);
 						RETURN_META_VALUE(MRES_IGNORED, 0);
 					}
 					CBaseEntity *pEntInflictor = gamehelpers->ReferenceToEntity(inflictor);
-					if (!pEntInflictor)
+					if (!pEntInflictor && inflictor != -1)
 					{
 						callback->GetParentContext()->BlamePluginError(callback, "Callback-provided entity %d for inflictor is invalid", inflictor);
 						RETURN_META_VALUE(MRES_IGNORED, 0);

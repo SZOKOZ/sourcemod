@@ -336,7 +336,7 @@ SMCSWeapon GetWeaponIdFromDefIdx(uint16_t iDefIdx)
 		SMCSWeapon_AUG, SMCSWeapon_AWP, SMCSWeapon_FAMAS, SMCSWeapon_G3SG1,
 		SMCSWeapon_NONE, SMCSWeapon_GALILAR, SMCSWeapon_M249, SMCSWeapon_NONE,
 		SMCSWeapon_M4A1, SMCSWeapon_MAC10, SMCSWeapon_NONE, SMCSWeapon_P90,
-		SMCSWeapon_NONE, SMCSWeapon_NONE, SMCSWeapon_NONE, SMCSWeapon_NONE,
+		SMCSWeapon_NONE, SMCSWeapon_NONE, SMCSWeapon_NONE, SMCSWeapon_MP5NAVY,
 		SMCSWeapon_UMP45, SMCSWeapon_XM1014, SMCSWeapon_BIZON, SMCSWeapon_MAG7,
 		SMCSWeapon_NEGEV, SMCSWeapon_SAWEDOFF, SMCSWeapon_TEC9, SMCSWeapon_TASER,
 		SMCSWeapon_HKP2000, SMCSWeapon_MP7, SMCSWeapon_MP9, SMCSWeapon_NOVA,
@@ -357,7 +357,7 @@ ItemDefHashValue *GetHashValueFromWeapon(const char *szWeapon)
 {
 	char tempWeapon[MAX_WEAPON_NAME_LENGTH];
 
-	Q_strncpy(tempWeapon, szWeapon, sizeof(tempWeapon));
+	ke::SafeStrcpy(tempWeapon, sizeof(tempWeapon), szWeapon);
 	Q_strlower(tempWeapon);
 
 	if (strstr(tempWeapon, "weapon_") == NULL && strstr(tempWeapon, "item_") == NULL)
@@ -367,7 +367,7 @@ ItemDefHashValue *GetHashValueFromWeapon(const char *szWeapon)
 		for (unsigned int i = 0; i < SM_ARRAYSIZE(szClassPrefixs); i++)
 		{
 			char classname[MAX_WEAPON_NAME_LENGTH];
-			Q_snprintf(classname, sizeof(classname), "%s%s", szClassPrefixs[i], tempWeapon);
+			ke::SafeSprintf(classname, sizeof(classname), "%s%s", szClassPrefixs[i], tempWeapon);
 
 			ClassnameMap::Result res = g_mapClassToDefIdx.find(classname);
 

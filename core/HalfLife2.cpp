@@ -50,26 +50,8 @@
 
 typedef ICommandLine *(*FakeGetCommandLine)();
 
-#if defined _WIN32
-#define TIER0_NAME			"tier0.dll"
-#define VSTDLIB_NAME		"vstdlib.dll"
-#elif defined __APPLE__
-#define TIER0_NAME			"libtier0.dylib"
-#define VSTDLIB_NAME		"libvstdlib.dylib"
-#elif defined __linux__
-#if SOURCE_ENGINE == SE_HL2DM || SOURCE_ENGINE == SE_DODS || SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_TF2 \
-	|| SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_LEFT4DEAD2 || SOURCE_ENGINE == SE_NUCLEARDAWN \
-	|| SOURCE_ENGINE == SE_BMS || SOURCE_ENGINE == SE_INSURGENCY || SOURCE_ENGINE == SE_DOI
-#define TIER0_NAME			"libtier0_srv.so"
-#define VSTDLIB_NAME		"libvstdlib_srv.so"
-#elif SOURCE_ENGINE >= SE_LEFT4DEAD
-#define TIER0_NAME			"libtier0.so"
-#define VSTDLIB_NAME		"libvstdlib.so"
-#else
-#define TIER0_NAME			"tier0_i486.so"
-#define VSTDLIB_NAME		"vstdlib_i486.so"
-#endif
-#endif
+#define TIER0_NAME			SOURCE_BIN_PREFIX "tier0" SOURCE_BIN_SUFFIX SOURCE_BIN_EXT
+#define VSTDLIB_NAME		SOURCE_BIN_PREFIX "vstdlib" SOURCE_BIN_SUFFIX SOURCE_BIN_EXT
 
 CHalfLife2 g_HL2;
 ConVar *sv_lan = NULL;
@@ -157,6 +139,7 @@ void CHalfLife2::OnSourceModAllInitialized_Post()
 	m_CSGOBadList.add("m_flFallbackWear");
 	m_CSGOBadList.add("m_nFallbackStatTrak");
 	m_CSGOBadList.add("m_iCompetitiveRanking");
+	m_CSGOBadList.add("m_iCompetitiveRankType");
 	m_CSGOBadList.add("m_nActiveCoinRank");
 	m_CSGOBadList.add("m_nMusicID");
 #endif
@@ -180,7 +163,7 @@ ConfigResult CHalfLife2::OnSourceModConfigChanged(const char *key, const char *v
 		}
 		else
 		{
-			ke::SafeSprintf(error, maxlength, "Invalid value: must be \"yes\" or \"no\"");
+			ke::SafeStrcpy(error, maxlength, "Invalid value: must be \"yes\" or \"no\"");
 			return ConfigResult_Reject;
 		}
 #endif
@@ -850,7 +833,7 @@ void CHalfLife2::AddDelayedKick(int client, int userid, const char *msg)
 
 	kick.client = client;
 	kick.userid = userid;
-	ke::SafeSprintf(kick.buffer, sizeof(kick.buffer), "%s", msg);
+	ke::SafeStrcpy(kick.buffer, sizeof(kick.buffer), msg);
 
 	m_DelayedKicks.push(kick);
 }
@@ -1217,7 +1200,7 @@ bool IsWindowsReservedDeviceName(const char *pMapname)
 	};
 	
 	size_t reservedCount = sizeof(reservedDeviceNames) / sizeof(reservedDeviceNames[0]);
-	for (int i = 0; i < reservedCount; ++i)
+	for (size_t i = 0; i < reservedCount; ++i)
 	{
 		if (CheckReservedFilename(pMapname, reservedDeviceNames[i]))
 		{
@@ -1283,19 +1266,26 @@ SMFindMapResult CHalfLife2::FindMap(const char *pMapName, char *pFoundMap, size_
 		return SMFindMapResult::FuzzyMatch;
 	}
 
-#elif SOURCE_ENGINE == SE_TF2 || SOURCE_ENGINE == SE_BMS
-	static char szTemp[PLATFORM_MAX_PATH];
-	if (pFoundMap == NULL)
+#elif SOURCE_ENGINE == SE_TF2 || SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_DODS || SOURCE_ENGINE == SE_HL2DM \
+	|| SOURCE_ENGINE == SE_SDK2013 || SOURCE_ENGINE == SE_BMS
+	static IVEngineServer *engine23 = (IVEngineServer *)(g_SMAPI->GetEngineFactory()("VEngineServer023", nullptr));
+	if (engine23)
 	{
-		ke::SafeStrcpy(szTemp, SM_ARRAYSIZE(szTemp), pMapName);
-		pFoundMap = szTemp;
-		nMapNameMax = 0;
-	}
+		static char szTemp[PLATFORM_MAX_PATH];
+		if (pFoundMap == NULL)
+		{
+			ke::SafeStrcpy(szTemp, SM_ARRAYSIZE(szTemp), pMapName);
+			pFoundMap = szTemp;
+			nMapNameMax = 0;
+		}
 
-	return static_cast<SMFindMapResult>(engine->FindMap(pFoundMap, static_cast<int>(nMapNameMax)));
-#elif SOURCE_ENGINE == SE_CSS || SOURCE_ENGINE == SE_DODS || SOURCE_ENGINE == SE_HL2DM || SOURCE_ENGINE == SE_SDK2013
-	static IVEngineServer *engine21 = (IVEngineServer *)(g_SMAPI->GetEngineFactory()("VEngineServer021", nullptr));
-	return engine21->IsMapValid(pMapName) == 0 ? SMFindMapResult::NotFound : SMFindMapResult::Found;
+		return static_cast<SMFindMapResult>(engine->FindMap(pFoundMap, static_cast<int>(nMapNameMax)));
+	}
+	else
+	{
+		static IVEngineServer *engine21 = (IVEngineServer *)(g_SMAPI->GetEngineFactory()("VEngineServer021", nullptr));
+		return engine21->IsMapValid(pMapName) == 0 ? SMFindMapResult::NotFound : SMFindMapResult::Found;
+	}
 #else
 	return engine->IsMapValid(pMapName) == 0 ? SMFindMapResult::NotFound : SMFindMapResult::Found;
 #endif
